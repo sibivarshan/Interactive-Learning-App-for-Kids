@@ -55,8 +55,8 @@ const SpaceQuizPage = () => {
   const questions = [
     { 
       question: "What planet do we live on?", 
-      options: ["Earth 🌎", "Mars 🔴", "Moon 🌕"], 
-      answer: "Earth 🌎" 
+      options: ["Earth", "Mars 🔴", "Moon 🌕"], 
+      answer: "Earth" 
     },
     { 
       question: "What is the big bright star in our sky?", 
@@ -106,10 +106,10 @@ const SpaceQuizPage = () => {
   ];
 
   const handleOptionSelect = (questionIndex, option) => {
-    setSelectedAnswers({
-      ...selectedAnswers,
-      [questionIndex]: option
-    });
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [questionIndex]: option, // Store selected option
+    }));
   };
 
   const handleSubmit = async () => {
@@ -180,14 +180,15 @@ const SpaceQuizPage = () => {
                   {q.options.map((option, idx) => (
                     <div 
                       key={idx}
+                      role="button"
                       className={`space-option ${selectedAnswers[index] === option ? 'selected' : ''}`}
                       onClick={() => handleOptionSelect(index, option)}
                     >
-                      <span className="space-option-indicator"></span>
                       <span className="space-option-text">{option}</span>
                     </div>
                   ))}
                 </div>
+
               </div>
             ))}
           </div>

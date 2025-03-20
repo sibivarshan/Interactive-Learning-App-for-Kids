@@ -9,57 +9,53 @@ import {
   addDoc,
   doc,
   getDoc,
-  updateDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 
 function SendFriendRequest() {
   const [username, setUsername] = useState('');
   const [status, setStatus] = useState('');
-  const [currentUserData, setCurrentUserData] = useState({ username: '', name: '' });
+  const [currentUserData, setCurrentUserData] = useState(null);
   const [friends, setFriends] = useState([]);
   const [loadingFriends, setLoadingFriends] = useState(true);
 
-  // Fetch current user's data (name and username)
+  // Fetch current user data and their friends
   useEffect(() => {
-    const fetchCurrentUserData = async () => {
-      if (auth.currentUser) {
+    const fetchData = async () => {
+      if (!auth.currentUser) return;
+
+      try {
+        // Get current user's details
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           setCurrentUserData(userDoc.data());
         }
-      }
-    };
 
-    const fetchFriends = async () => {
-      if (!auth.currentUser) return;
-
-      setLoadingFriends(true);
-      const friendsDocRef = doc(db, 'friends', auth.currentUser.uid);
-      const friendsDoc = await getDoc(friendsDocRef);
-
-      if (!friendsDoc.exists()) {
-        setFriends([]);
+        // Get friends list
+        setLoadingFriends(true);
+        const friendsDocRef = doc(db, 'friends', auth.currentUser.uid);
+        const friendsDoc = await getDoc(friendsDocRef);
+        if (friendsDoc.exists()) {
+          const friendIds = friendsDoc.data().friends || [];
+          const friendsData = await Promise.all(
+            friendIds.map(async (friendId) => {
+              const userDoc = await getDoc(doc(db, 'users', friendId));
+              return userDoc.exists() ? userDoc.data().username : 'Unknown User';
+            })
+          );
+          setFriends(friendsData);
+        } else {
+          setFriends([]);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
         setLoadingFriends(false);
-        return;
       }
-
-      const friendIds = friendsDoc.data().friends || [];
-
-      const friendsData = await Promise.all(
-        friendIds.map(async (friendId) => {
-          const userDoc = await getDoc(doc(db, 'users', friendId));
-          return userDoc.exists() ? userDoc.data().username : 'Unknown User';
-        })
-      );
-
-      setFriends(friendsData);
-      setLoadingFriends(false);
     };
 
-    fetchCurrentUserData();
-    fetchFriends();
+    fetchData();
   }, []);
 
   const handleSendRequest = async () => {
@@ -69,6 +65,11 @@ function SendFriendRequest() {
     }
 
     try {
+      if (!currentUserData) {
+        setStatus('Error: User data not loaded. Please try again.');
+        return;
+      }
+
       // Find the receiver user
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('username', '==', username));
@@ -87,7 +88,7 @@ function SendFriendRequest() {
         return;
       }
 
-      // Check if they're already friends
+      // Check if already friends
       const friendsDocRef = doc(db, 'friends', auth.currentUser.uid);
       const friendsDoc = await getDoc(friendsDocRef);
       if (friendsDoc.exists()) {
@@ -98,43 +99,29 @@ function SendFriendRequest() {
         }
       }
 
-      // Check if a request already exists
+      // Check if request already exists (sent or received)
       const friendRequestsRef = collection(db, 'friendRequests');
       const existingRequestQuery = query(
         friendRequestsRef, 
-        where('senderId', '==', auth.currentUser.uid),
-        where('receiverId', '==', receiverId)
+        where('senderId', 'in', [auth.currentUser.uid, receiverId]),
+        where('receiverId', 'in', [auth.currentUser.uid, receiverId])
       );
-      
-      const existingRequests = await getDocs(existingRequestQuery);
-      
-      if (!existingRequests.empty) {
-        setStatus('You have already sent a request to this user.');
-        return;
-      }
 
-      // Check if the other user sent you a request already
-      const reverseRequestQuery = query(
-        friendRequestsRef, 
-        where('senderId', '==', receiverId),
-        where('receiverId', '==', auth.currentUser.uid)
-      );
-      
-      const reverseRequests = await getDocs(reverseRequestQuery);
-      
-      if (!reverseRequests.empty) {
-        setStatus('This user has already sent you a request. Check your pending requests.');
+      const existingRequests = await getDocs(existingRequestQuery);
+
+      if (!existingRequests.empty) {
+        setStatus('A friend request already exists between you two.');
         return;
       }
 
       // Create a new document in friendRequests collection
-      await addDoc(collection(db, 'friendRequests'), {
+      await addDoc(friendRequestsRef, {
         senderId: auth.currentUser.uid,
         senderUsername: currentUserData.username,
         receiverId: receiverId,
         receiverUsername: receiverDoc.data().username,
         status: 'pending',
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       setStatus('Friend request sent!');
@@ -159,13 +146,13 @@ function SendFriendRequest() {
       <hr />
 
       <h3>Your Friends</h3>
-      {loadingFriends && <p>Loading friends...</p>}
-      {!loadingFriends && friends.length === 0 && <p>No friends added yet.</p>}
-      <ul>
-        {friends.map((friendUsername, index) => (
-          <li key={index}>{friendUsername}</li>
-        ))}
-      </ul>
+      {loadingFriends ? <p>Loading friends...</p> : friends.length === 0 ? <p>No friends added yet.</p> : (
+        <ul>
+          {friends.map((friendUsername, index) => (
+            <li key={index}>{friendUsername}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
