@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGame } from '../contexts/GameContext';
 import soundService from '../services/soundService';
-import InvaderProgressReport from '../ProgressReport/InvaderProgressReport';
+
 import './GameOver.css';
 
 function GameOver() {
