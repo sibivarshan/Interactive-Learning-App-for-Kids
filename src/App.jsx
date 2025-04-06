@@ -18,6 +18,7 @@ import SpeechChecker from './components/SpeechChecker/SpeechChecker';
 import CoursePage from "./components/lecture/CoursePage";
 import CourseContentPage from "./components/lecture/CourseContentPage";
 import QuizPage from "./components/lecture/QuizPage";
+import ScienceQuiz from './components/ScienceQuiz';
 import QuizBoard from './components/QuizBoard.jsx';
 import InvadersQuiz from './components/invadersQuiz/InvadersQuiz';
 import ImageQuiz from  './components/imageQuiz/Quiz.jsx';
@@ -87,6 +88,7 @@ function App() {
           <Route path="/quizzes" element={protectedRoute(QuizBoard)} />
           <Route path="/quizzes/invaders" element={protectedRoute(InvadersQuiz)} />
           <Route path="/quizzes/imageQuiz" element={protectedRoute(ImageQuiz)} />
+          <Route path="/quizzes/science" element={protectedRoute(ScienceQuiz)} />
           <Route path="/progress" element={protectedRoute(ProgressPage)} />
           
           {/* Challenge System Routes */}

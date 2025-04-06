@@ -1,0 +1,569 @@
+/* Base Styles */
+.container {
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
+  color: white;
+  font-family: 'Comic Neue', cursive;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.blackout {
+  background: #000 !important;
+  transition: background 0.3s ease;
+}
+
+/* Lab Background */
+.labBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  z-index: -1;
+}
+
+.bubbles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(0, 255, 157, 0.1) 0%, transparent 20%),
+    radial-gradient(circle at 80% 70%, rgba(255, 0, 157, 0.1) 0%, transparent 20%);
+  animation: float 15s infinite ease-in-out;
+}
+
+.equipment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(90deg, transparent 48%, rgba(255, 255, 255, 0.05) 50%, transparent 52%);
+  animation: scan 5s linear infinite;
+}
+
+.floatingElements {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.floatingElement {
+  position: absolute;
+  font-size: 2rem;
+  animation: floatElement 10s infinite ease-in-out;
+  opacity: 0.7;
+}
+
+@keyframes floatElement {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-50px) rotate(10deg); }
+}
+
+/* Particle Effects */
+.particleContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: floatUp 2s ease-out forwards;
+  opacity: 0.8;
+}
+
+@keyframes floatUp {
+  to {
+    transform: translateY(-100vh) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Scientist */
+.scientistContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: flex-end;
+  z-index: 10;
+}
+
+.scientist {
+  width: 120px;
+  height: 180px;
+  position: relative;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.scientist:hover {
+  transform: rotate(-5deg) scale(1.05);
+}
+
+.head {
+  width: 80px;
+  height: 80px;
+  background: #f5f5f5;
+  border-radius: 50%;
+  position: relative;
+  border: 3px solid #333;
+  z-index: 2;
+}
+
+.eyes {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 25px;
+}
+
+.eye {
+  width: 15px;
+  height: 15px;
+  background: #333;
+  border-radius: 50%;
+  animation: blink 4s infinite;
+}
+
+.mouth {
+  width: 30px;
+  height: 8px;
+  background: #333;
+  margin: 10px auto 0;
+  border-radius: 0 0 10px 10px;
+  animation: talk 0.5s infinite alternate;
+}
+
+.glasses {
+  position: absolute;
+  width: 80px;
+  height: 30px;
+  border: 3px solid #333;
+  border-radius: 10px;
+  top: 35px;
+  left: 10px;
+}
+
+.body {
+  width: 70px;
+  height: 90px;
+  background: white;
+  margin: -10px auto 0;
+  border-radius: 20px 20px 0 0;
+  border: 3px solid #333;
+  position: relative;
+  z-index: 1;
+}
+
+.labCoat {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  border: 3px solid #333;
+}
+
+.leftArm, .rightArm {
+  position: absolute;
+  width: 20px;
+  height: 80px;
+  background: white;
+  top: 20px;
+  border: 3px solid #333;
+  z-index: 1;
+}
+
+.leftArm {
+  left: -20px;
+  transform-origin: top right;
+  animation: armWaveLeft 2s infinite;
+}
+
+.rightArm {
+  right: -20px;
+  transform-origin: top left;
+  animation: armWaveRight 2s infinite 0.5s;
+}
+
+.speechBubble {
+  background: white;
+  color: #333;
+  padding: 15px;
+  border-radius: 15px;
+  margin-left: 20px;
+  max-width: 250px;
+  position: relative;
+  animation: float 3s infinite ease-in-out;
+  font-size: 16px;
+  z-index: 11;
+}
+
+.speechBubble:after {
+  content: '';
+  position: absolute;
+  left: -15px;
+  bottom: 30px;
+  width: 0;
+  height: 0;
+  border: 15px solid transparent;
+  border-right-color: white;
+  border-left: 0;
+}
+
+.funFact {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #333;
+  font-style: italic;
+  color: #4a6ea9;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Quiz Screens */
+.welcomeScreen {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 40px;
+  border-radius: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+  border: 3px solid #00ff9d;
+  box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+  z-index: 10;
+}
+
+.welcomeScreen h1 {
+  color: #ff00ff;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+}
+
+.welcomeScreen p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #00ff9d;
+}
+
+.startButton {
+  background: #ff00ff;
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
+.startButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+}
+
+.quizContent {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 600px;
+  width: 100%;
+  border: 3px solid #00ff9d;
+  box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+  z-index: 10;
+}
+
+.questionHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  color: #ff00ff;
+  font-size: 1.1rem;
+}
+
+.question {
+  font-size: 1.4rem;
+  margin-bottom: 30px;
+  line-height: 1.4;
+  color: white;
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Experiment Simulation */
+.experimentSimulation {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.moleculeViewer {
+  width: 200px;
+  height: 200px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 15px;
+  border: 2px solid #00ff9d;
+  box-shadow: 0 0 30px rgba(0,255,157,0.3);
+  overflow: hidden;
+}
+
+.reactionButton {
+  background: #ff00ff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+}
+
+.reactionButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255,0,255,0.5);
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.answerButton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #00ff9d;
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  transform-style: preserve-3d;
+}
+
+.answerButton:before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, 
+    rgba(255,255,255,0.1) 10%,
+    transparent 30%,
+    rgba(255,255,255,0.1) 50%
+  );
+  animation: energyFlow 3s infinite linear;
+}
+
+.answerButton:hover:not(:disabled) {
+  background: rgba(0, 255, 157, 0.2);
+  transform: translateY(-3px);
+}
+
+.answerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.correct {
+  background: #00ff9d !important;
+  color: #1a1a1a !important;
+  animation: correctPulse 0.5s;
+}
+
+.incorrect {
+  background: #ff0062 !important;
+  animation: incorrectShake 0.5s;
+}
+
+.resultsScreen {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 40px;
+  border-radius: 15px;
+  max-width: 600px;
+  border: 3px solid #ff00ff;
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: confettiFall 3s linear forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.scoreDisplay {
+  font-size: 2.5rem;
+  margin: 20px 0;
+  color: #ff00ff;
+  font-weight: bold;
+}
+
+.scoreComment {
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.restartButton {
+  background: #ff00ff;
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+  position: relative;
+  z-index: 11;
+}
+
+.restartButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
+/* Gesture Guide */
+.gestureGuide {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 25px;
+  color: #00ff9d;
+  font-size: 1.1rem;
+  animation: pulseGlow 2s infinite;
+  z-index: 10;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 100px; }
+}
+
+@keyframes blink {
+  0%, 48%, 52%, 100% { height: 15px; }
+  50% { height: 3px; }
+}
+
+@keyframes talk {
+  from { height: 8px; }
+  to { height: 3px; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes correctPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 157, 0.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes incorrectShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+@keyframes energyFlow {
+  to { transform: translate(50%, 50%); }
+}
+
+@keyframes pulseGlow {
+  50% { box-shadow: 0 0 15px rgba(0,255,157,0.3); }
+}
+
+@keyframes armWaveLeft {
+  0%, 100% { transform: rotate(-20deg); }
+  50% { transform: rotate(40deg); }
+}
+
+@keyframes armWaveRight {
+  0%, 100% { transform: rotate(20deg); }
+  50% { transform: rotate(-40deg); }
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  .scientistContainer {
+    position: static;
+    margin-bottom: 30px;
+    justify-content: center;
+  }
+  
+  .speechBubble {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  
+  .speechBubble:after {
+    left: 50%;
+    bottom: -15px;
+    border: 15px solid transparent;
+    border-top-color: white;
+    border-bottom: 0;
+    transform: translateX(-50%);
+  }
+  
+  .welcomeScreen, .quizContent, .resultsScreen {
+    padding: 20px;
+    margin: 20px;
+  }
+  
+  .question {
+    font-size: 1.2rem;
+  }
+
+  .moleculeViewer {
+    width: 150px;
+    height: 150px;
+  }
+}
