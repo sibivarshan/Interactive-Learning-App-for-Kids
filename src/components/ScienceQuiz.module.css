@@ -1,4 +1,3 @@
-/* Base Styles */
 .container {
   min-height: 100vh;
   background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
@@ -18,7 +17,16 @@
   transition: background 0.3s ease;
 }
 
-/* Lab Background */
+.timer {
+  color: #ff00ff;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255,0,255,0.5);
+  padding: 5px 15px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.5);
+  margin: 0 10px;
+}
+
 .labBackground {
   position: fixed;
   top: 0;
@@ -67,7 +75,6 @@
   50% { transform: translateY(-50px) rotate(10deg); }
 }
 
-/* Particle Effects */
 .particleContainer {
   position: fixed;
   top: 0;
@@ -92,7 +99,6 @@
   }
 }
 
-/* Scientist */
 .scientistContainer {
   position: fixed;
   bottom: 20px;
@@ -122,6 +128,7 @@
   position: relative;
   border: 3px solid #333;
   z-index: 2;
+  overflow: visible;
 }
 
 .eyes {
@@ -145,16 +152,6 @@
   margin: 10px auto 0;
   border-radius: 0 0 10px 10px;
   animation: talk 0.5s infinite alternate;
-}
-
-.glasses {
-  position: absolute;
-  width: 80px;
-  height: 30px;
-  border: 3px solid #333;
-  border-radius: 10px;
-  top: 35px;
-  left: 10px;
 }
 
 .body {
@@ -233,7 +230,6 @@
   animation: fadeIn 0.5s ease-out;
 }
 
-/* Quiz Screens */
 .welcomeScreen {
   text-align: center;
   background: rgba(0, 0, 0, 0.7);
@@ -306,41 +302,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Experiment Simulation */
-.experimentSimulation {
-  margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.moleculeViewer {
-  width: 200px;
-  height: 200px;
-  background: rgba(0,0,0,0.7);
-  border-radius: 15px;
-  border: 2px solid #00ff9d;
-  box-shadow: 0 0 30px rgba(0,255,157,0.3);
-  overflow: hidden;
-}
-
-.reactionButton {
-  background: #ff00ff;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-weight: bold;
-}
-
-.reactionButton:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(255,0,255,0.5);
 }
 
 .answers {
@@ -460,7 +421,6 @@
   box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
 }
 
-/* Gesture Guide */
 .gestureGuide {
   position: fixed;
   bottom: 20px;
@@ -475,7 +435,6 @@
   z-index: 10;
 }
 
-/* Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -531,7 +490,6 @@
   50% { transform: rotate(-40deg); }
 }
 
-/* Mobile Optimization */
 @media (max-width: 768px) {
   .scientistContainer {
     position: static;
@@ -562,8 +520,8 @@
     font-size: 1.2rem;
   }
 
-  .moleculeViewer {
-    width: 150px;
-    height: 150px;
+  .timer {
+    font-size: 0.9rem;
+    padding: 3px 10px;
   }
 }

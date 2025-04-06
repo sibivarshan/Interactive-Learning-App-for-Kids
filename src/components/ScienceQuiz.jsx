@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './ScienceQuiz.module.css';
 import { Howl } from 'howler';
 import { useGesture } from '@use-gesture/react';
-import ReactPlayer from 'react-player';
 
 const ScienceQuiz = () => {
   const [quizState, setQuizState] = useState('welcome');
@@ -13,8 +12,9 @@ const ScienceQuiz = () => {
   const [showFunFact, setShowFunFact] = useState(false);
   const [labLights, setLabLights] = useState(true);
   const [particles, setParticles] = useState([]);
-  const [reaction, setReaction] = useState(null);
   const [voice, setVoice] = useState(null);
+  const [timer, setTimer] = useState(30);
+  const [isVoiceReady, setIsVoiceReady] = useState(false);
   const animationFrame = useRef(null);
 
   const questions = [
@@ -133,26 +133,61 @@ const ScienceQuiz = () => {
     }
   ];
 
-  // Voice Synthesis
   useEffect(() => {
-    if ('speechSynthesis' in window) {
-      const voices = speechSynthesis.getVoices();
-      const scientistVoice = voices.find(v => v.name.includes('Google UK English Female')) || voices[0];
-      setVoice(scientistVoice);
-    }
+    const handleVoicesChanged = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        const scientistVoice = voices.find(v => 
+          v.name.includes('Google UK English Female') || 
+          v.lang === 'en-GB' || 
+          v.lang.startsWith('en-')
+        ) || voices[0];
+        setVoice(scientistVoice);
+        setIsVoiceReady(true);
+      }
+    };
+
+    // Initial check
+    handleVoicesChanged();
+
+    // Add event listener for voice changes
+    window.speechSynthesis.onvoiceschanged = handleVoicesChanged;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
   }, []);
 
-  const speak = (text) => {
-    if (voice) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.voice = voice;
-      utterance.pitch = 0.8;
-      utterance.rate = 0.9;
-      speechSynthesis.speak(utterance);
+  // Timer effect
+  useEffect(() => {
+    let interval;
+    if (quizState === 'quiz' && !selectedAnswer) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            handleTimeUp();
+            return 30;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
+    return () => clearInterval(interval);
+  }, [quizState, currentQuestion, selectedAnswer]);
+
+  // Speech function with cancellation and checks
+  const speak = (text) => {
+    if (!isVoiceReady || !voice) return;
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = voice;
+    utterance.pitch = 0.8;
+    utterance.rate = 0.9;
+    utterance.onerror = (e) => console.error('Speech error:', e);
+    window.speechSynthesis.speak(utterance);
   };
 
-  // Gesture Controls
   const bindGestures = useGesture({
     onSwipedLeft: () => handleSwipe('left'),
     onSwipedRight: () => handleSwipe('right')
@@ -164,11 +199,10 @@ const ScienceQuiz = () => {
         ? Math.min(currentQuestion + 1, questions.length - 1)
         : Math.max(currentQuestion - 1, 0);
       setCurrentQuestion(newIndex);
-      speak(questions[newIndex].hint);
+      setTimeout(() => speak(questions[newIndex].hint), 100);
     }
   };
 
-  // Particle Effects
   const createParticles = (isCorrect) => {
     const newParticles = Array(30).fill().map(() => ({
       x: Math.random() * window.innerWidth,
@@ -181,7 +215,6 @@ const ScienceQuiz = () => {
     setParticles(newParticles);
   };
 
-  // Sound Effects
   const playSound = (effect) => {
     const sound = new Howl({
       src: [`/sounds/${effect}.mp3`],
@@ -192,9 +225,38 @@ const ScienceQuiz = () => {
 
   const startQuiz = () => {
     setQuizState('quiz');
-    setScientistMessage(questions[0].hint);
-    speak(questions[0].hint);
+    setTimer(30);
+    setTimeout(() => {
+      setScientistMessage(questions[0].hint);
+      speak(questions[0].hint);
+    }, 500);
     playSound('bubble');
+  };
+
+  const handleTimeUp = () => {
+    playSound('wrong');
+    createParticles(false);
+    setSelectedAnswer(-1);
+    setShowFunFact(true);
+    setLabLights(false);
+    
+    setTimeout(() => {
+      setLabLights(true);
+      setShowFunFact(false);
+      setSelectedAnswer(null);
+      setTimer(30);
+      
+      if (currentQuestion + 1 < questions.length) {
+        setCurrentQuestion(prev => prev + 1);
+        setTimeout(() => {
+          setScientistMessage(questions[currentQuestion + 1].hint);
+          speak(questions[currentQuestion + 1].hint);
+        }, 100);
+      } else {
+        setQuizState('results');
+        playSound('complete');
+      }
+    }, 3000);
   };
 
   const handleAnswer = (isCorrect, index) => {
@@ -210,11 +272,14 @@ const ScienceQuiz = () => {
       setLabLights(true);
       setShowFunFact(false);
       setSelectedAnswer(null);
+      setTimer(30);
       
       if (currentQuestion + 1 < questions.length) {
-        setCurrentQuestion(currentQuestion + 1);
-        setScientistMessage(questions[currentQuestion + 1].hint);
-        speak(questions[currentQuestion + 1].hint);
+        setCurrentQuestion(prev => prev + 1);
+        setTimeout(() => {
+          setScientistMessage(questions[currentQuestion + 1].hint);
+          speak(questions[currentQuestion + 1].hint);
+        }, 100);
       } else {
         setQuizState('results');
         playSound('complete');
@@ -228,53 +293,11 @@ const ScienceQuiz = () => {
     setScore(0);
     setSelectedAnswer(null);
     setScientistMessage("Welcome back! Try again?");
-    speak("Welcome back! Ready to try again?");
+    setTimeout(() => speak("Welcome back! Ready to try again?"), 500);
   };
-
-  // 3D Molecule Component
-  const MoleculeViewer = ({ formula }) => (
-    <div className={styles.moleculeViewer}>
-      <ReactPlayer
-        url={`/molecules/${formula}.mp4`}
-        playing
-        loop
-        width={200}
-        height={200}
-        controls={false}
-      />
-    </div>
-  );
-
-  // Experiment Simulation
-  const ExperimentSimulation = ({ question }) => {
-    if (question.molecule) {
-      return (
-        <div className={styles.experimentSimulation}>
-          <MoleculeViewer formula={question.molecule} />
-          <button 
-            className={styles.reactionButton}
-            onClick={() => playSound('explosion')}
-          >
-            💥 Try Reaction
-          </button>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Clean up animation frame
-  useEffect(() => {
-    return () => {
-      if (animationFrame.current) {
-        cancelAnimationFrame(animationFrame.current);
-      }
-    };
-  }, []);
 
   return (
     <div className={`${styles.container} ${!labLights ? styles.blackout : ''}`} {...bindGestures()}>
-      {/* Particle Effects */}
       <div className={styles.particleContainer}>
         {particles.map((p, i) => (
           <div key={i} className={styles.particle} style={{
@@ -287,7 +310,6 @@ const ScienceQuiz = () => {
         ))}
       </div>
 
-      {/* Lab Background */}
       <div className={styles.labBackground}>
         <div className={styles.bubbles}></div>
         <div className={styles.equipment}></div>
@@ -304,7 +326,6 @@ const ScienceQuiz = () => {
         </div>
       </div>
 
-      {/* Scientist */}
       <div className={styles.scientistContainer}>
         <div className={styles.scientist}>
           <div className={styles.head}>
@@ -313,7 +334,6 @@ const ScienceQuiz = () => {
               <div className={styles.eye}></div>
             </div>
             <div className={styles.mouth}></div>
-            <div className={styles.glasses}></div>
           </div>
           <div className={styles.body}>
             <div className={styles.labCoat}></div>
@@ -331,7 +351,6 @@ const ScienceQuiz = () => {
         </div>
       </div>
 
-      {/* Quiz Content */}
       {quizState === 'welcome' && (
         <div className={styles.welcomeScreen}>
           <h1>MAD SCIENTIST LAB QUIZ</h1>
@@ -346,14 +365,13 @@ const ScienceQuiz = () => {
         <div className={styles.quizContent}>
           <div className={styles.questionHeader}>
             <span>Question {currentQuestion + 1}/{questions.length}</span>
+            <div className={styles.timer}>⏳ {timer}s</div>
             <span>Score: {score}</span>
           </div>
           
           <div className={styles.question}>
             {questions[currentQuestion].questionText}
           </div>
-
-          <ExperimentSimulation question={questions[currentQuestion]} />
 
           <div className={styles.answers}>
             {questions[currentQuestion].answerOptions.map((option, index) => (
@@ -404,12 +422,10 @@ const ScienceQuiz = () => {
         </div>
       )}
 
-      {/* Gesture Guide */}
       <div className={styles.gestureGuide}>
         ← Swipe to navigate →
       </div>
     </div>
   );
 };
-
 export default ScienceQuiz;
