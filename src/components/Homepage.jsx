@@ -254,6 +254,10 @@ function Homepage({ onLogout, currentUserId }) {
               className="mascot-card"
               whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
               transition={{ type: "spring", stiffness: 300 }}
+              onClick={() => {
+                window.location.href = 'http://localhost:3001/';
+              }}
+              style={{ cursor: 'pointer' }}
             >
               <div className="mascot-image-container">
                 <img src="https://img.pikbest.com/png-images/20240730/kids-coding-vector-art-icons-and-graphics-for-free_10688748.png!sw800" alt="Kids Coding" />
