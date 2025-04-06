@@ -91,6 +91,14 @@ function App() {
           <Route path="/quizzes/science" element={protectedRoute(ScienceQuiz)} />
           <Route path="/progress" element={protectedRoute(ProgressPage)} />
           
+          {/* Lecture Module Routes */}
+          <Route path="/lecture" element={user ? <CoursePage /> : <Navigate to="/login" />} />
+          <Route path="/lecture/course-content" element={user ? <CourseContentPage /> : <Navigate to="/login" />} />
+          <Route path="/lecture/quiz" element={user ? <QuizPage /> : <Navigate to="/login" />} />
+          <Route 
+            path="/lecture/progress-report" 
+            element={user ? <LectureProgressReport /> : <Navigate to="/login" />} 
+          />
           {/* Challenge System Routes */}
           <Route path="/challenge-friend" element={protectedRoute(ChallengePage)} />
           <Route path="/word-builder/:sessionId" element={protectedRoute(MultiplayerWordBuilder)} />

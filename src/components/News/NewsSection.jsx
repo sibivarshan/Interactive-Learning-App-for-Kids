@@ -7,213 +7,256 @@ const NewsSection = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('ta'); // Default to Tamil
+  const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
   
-  // Using your existing API key
-  const API_KEY = '8243ad01604fe2c9e7aedabc23d535b2';
+
+  const rssSources = [
+    {
+      url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.sciencenewsforstudents.org/feed',
+      language: 'en'
+    },
+    {
+      url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.sciencedaily.com/rss/top/science.xml',
+      language: 'en'
+    },
+    {
+      url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.nasa.gov/rss/dyn/breaking_news.rss',
+      language: 'en'
+    }
+  ];
   
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        setLoading(true);
-        
-        // First attempt: Try to get Indian educational content for kids
-        const response = await axios.get('https://gnews.io/api/v4/search', {
-          params: {
-            q: 'india kids education science discovery',
-            lang: 'en',
-            country: 'in',  // Specify India as country
-            max: 10,
-            sortby: 'publishedAt',
-            in: 'title,description',
-            apikey: API_KEY
-          }
-        });
-        
-        console.log("API Response:", response.data);
-        
-        // Get Tamil language news specifically
-        const tamilResponse = await axios.get('https://gnews.io/api/v4/search', {
-          params: {
-            q: 'குழந்தைகள் கல்வி அறிவியல்', // Tamil keywords for "children education science"
-            lang: 'ta',  // Tamil language code
-            country: 'in',
-            max: 3,
-            sortby: 'publishedAt',
-            apikey: API_KEY
-          }
-        });
-        
-        console.log("Tamil API Response:", tamilResponse.data);
-        
-        if (!response.data.articles || !Array.isArray(response.data.articles)) {
-          throw new Error("Invalid response format");
-        }
-        
-        // Initial strict filtering for obviously inappropriate content
-        const strictInappropriateTerms = ['death', 'dead', 'kill', 'war', 'crime', 'gun', 'shot', 'violence'];
-        
-        // Apply strict filtering first
-        let kidFriendlyNews = response.data.articles.filter(article => {
-          const titleLower = article.title?.toLowerCase() || '';
-          const descLower = article.description?.toLowerCase() || '';
+  // Regional language sources
+  const regionalSources = {
+    ta: 'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/tamil/rss.xml',
+    ml: 'https://api.rss2json.com/v1/api.json?rss_url=https://malayalam.news18.com/commonfeeds/v1/mal/rss/world.xml',
+    te: 'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/telugu/rss.xml'
+  };
+  
+  // Format time for display
+  const formatRefreshTime = (date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const fetchRssFeed = async () => {
+    try {
+      setLoading(true);
+      
+      // Filter out inappropriate content for children
+      const inappropriateTerms = ['death', 'dead', 'kill', 'war', 'crime', 'gun', 'shot', 'violence', 
+                                'murder', 'suicide', 'blood', 'attack', 'terror', 'porn', 'sex',
+                                'abuse', 'assault', 'bomb', 'drunk', 'alcohol'];
+      
+      let allEnglishArticles = [];
+      let regionalArticles = [];
+      
+      // Fetch from English RSS sources
+      for (const source of rssSources) {
+        try {
+          const response = await axios.get(source.url, { timeout: 10000 });
           
-          return !strictInappropriateTerms.some(term => 
-            titleLower.includes(term) || descLower.includes(term)
-          );
-        });
-        
-        console.log("Filtered articles after strict filtering:", kidFriendlyNews.length);
-        
-        // If we don't have enough articles with strict filtering, try with looser filtering
-        if (kidFriendlyNews.length < 2) {
-          console.log("Not enough articles with strict filtering, applying looser filters");
-          
-          // Less restrictive filtering - remove some terms from the list
-          const looseInappropriateTerms = ['death', 'kill', 'crime', 'gun'];
-          
-          kidFriendlyNews = response.data.articles.filter(article => {
-            const titleLower = article.title?.toLowerCase() || '';
-            const descLower = article.description?.toLowerCase() || '';
+          if (response.data && response.data.items && Array.isArray(response.data.items)) {
+            const articles = response.data.items.map(item => ({
+              title: item.title,
+              description: item.description || item.content,
+              url: item.link,
+              image: item.enclosure?.link || item.thumbnail || extractImageFromContent(item.content || item.description),
+              publishedAt: item.pubDate,
+              language: 'en'
+            }));
             
-            return !looseInappropriateTerms.some(term => 
-              titleLower.includes(term) || descLower.includes(term)
-            );
-          });
-          
-          console.log("Filtered articles after loose filtering:", kidFriendlyNews.length);
-        }
-        
-        // Process Tamil news
-        let tamilNews = [];
-        if (tamilResponse.data.articles && Array.isArray(tamilResponse.data.articles) && tamilResponse.data.articles.length > 0) {
-          // Take the first Tamil article
-          tamilNews = [tamilResponse.data.articles[0]];
-          // Add language indicator
-          tamilNews[0].isTamil = true;
-        } else {
-          // Fallback Tamil news
-          tamilNews = [{
-            title: "குழந்தைகளுக்கான அறிவியல் கண்டுபிடிப்புகள்",
-            description: "சென்னையில் குழந்தைகளுக்கான புதிய அறிவியல் கண்டுபிடிப்புகள் குறித்த கண்காட்சி நடைபெறவுள்ளது.",
-            image: "https://images.unsplash.com/photo-1632571401005-458e9d244591?q=80&w=500&auto=format&fit=crop",
-            url: "https://www.sciencekids.co.nz/sciencefacts/countries/india.html",
-            isTamil: true
-          }];
-        }
-        
-        // If we still don't have enough, try a second API call with broader terms
-        if (kidFriendlyNews.length < 1) {
-          console.log("Still not enough articles, trying broader search query");
-          
-          const broadResponse = await axios.get('https://gnews.io/api/v4/search', {
-            params: {
-              q: 'children education technology',  // Broader search terms
-              lang: 'en',
-              max: 10,
-              sortby: 'publishedAt',
-              in: 'title,description',
-              apikey: API_KEY
-            }
-          });
-          
-          if (broadResponse.data.articles && Array.isArray(broadResponse.data.articles)) {
-            const broadFilteredNews = broadResponse.data.articles.filter(article => {
-              const titleLower = article.title?.toLowerCase() || '';
-              const descLower = article.description?.toLowerCase() || '';
+            // Filter articles based on inappropriate terms
+            const filteredArticles = articles.filter(article => {
+              if (!article.title || !article.description) return false;
               
-              return !strictInappropriateTerms.some(term => 
+              const titleLower = article.title.toLowerCase();
+              const descLower = article.description.toLowerCase();
+              
+              return !inappropriateTerms.some(term => 
                 titleLower.includes(term) || descLower.includes(term)
               );
             });
             
-            // Combine the results
-            kidFriendlyNews = [...kidFriendlyNews, ...broadFilteredNews];
+            allEnglishArticles = [...allEnglishArticles, ...filteredArticles];
           }
+        } catch (sourceError) {
+          console.error(`Error fetching from ${source.url}:`, sourceError);
         }
-        
-        // Take English articles (up to 3 since we'll add 1 Tamil article)
-        let finalNews = kidFriendlyNews.slice(0, 3);
-        
-        // If we still don't have enough articles, use fallback data
-        if (finalNews.length < 3) {
-          console.log("Not enough articles after all attempts, adding fallback data");
-          
-          // Use fallback data with Indian content where possible
-          const fallbackData = [
-            {
-              title: "Indian Students Create Award-Winning Science Project",
-              description: "A group of students from Mumbai have created a solar-powered water purification system that won national recognition for innovation.",
-              image: "https://images.unsplash.com/photo-1550565118-3a14e8d0386f?q=80&w=500&auto=format&fit=crop",
-              url: "https://www.education.com/science-fair/"
-            },
-            {
-              title: "New Children's Museum Opens in Delhi",
-              description: "A state-of-the-art interactive science museum for children has opened in Delhi featuring hands-on exhibits about space, robotics, and nature.",
-              image: "https://images.unsplash.com/photo-1575550959106-5a7defe28b56?q=80&w=500&auto=format&fit=crop",
-              url: "https://www.sciencekids.co.nz/sciencefacts/countries/india.html"
-            },
-            {
-              title: "Wildlife Sanctuary Creates Special Program for Young Naturalists",
-              description: "A wildlife sanctuary in Kerala has launched a special program to educate children about local ecosystems and conservation efforts.",
-              image: "https://images.unsplash.com/photo-1564652518878-669c5d535c00?q=80&w=500&auto=format&fit=crop",
-              url: "https://kids.nationalgeographic.com/animals"
-            }
-          ];
-          
-          // Add fallback items until we have 3 English articles
-          const neededFallbackItems = 3 - finalNews.length;
-          finalNews = [...finalNews, ...fallbackData.slice(0, neededFallbackItems)];
-        }
-        
-        // Combine English and Tamil news to get a total of 4 articles
-        finalNews = [...finalNews, ...tamilNews];
-        
-        setNews(finalNews);
-        setLoading(false);
-        
-      } catch (err) {
-        console.error("Error fetching news:", err);
-        setLoading(false);
-        
-        // Use India-focused fallback data including a Tamil article
-        setNews([
-          {
-            title: "Indian Students Create Award-Winning Science Project",
-            description: "A group of students from Mumbai have created a solar-powered water purification system that won national recognition for innovation.",
-            image: "https://images.unsplash.com/photo-1550565118-3a14e8d0386f?q=80&w=500&auto=format&fit=crop",
-            url: "https://www.education.com/science-fair/"
-          },
-          {
-            title: "New Children's Museum Opens in Delhi",
-            description: "A state-of-the-art interactive science museum for children has opened in Delhi featuring hands-on exhibits about space, robotics, and nature.",
-            image: "https://images.unsplash.com/photo-1575550959106-5a7defe28b56?q=80&w=500&auto=format&fit=crop",
-            url: "https://www.sciencekids.co.nz/sciencefacts/countries/india.html"
-          },
-          {
-            title: "Wildlife Sanctuary Creates Special Program for Young Naturalists",
-            description: "A wildlife sanctuary in Kerala has launched a special program to educate children about local ecosystems and conservation efforts.",
-            image: "https://images.unsplash.com/photo-1564652518878-669c5d535c00?q=80&w=500&auto=format&fit=crop",
-            url: "https://kids.nationalgeographic.com/animals"
-          },
-          {
-            title: "குழந்தைகளுக்கான அறிவியல் கண்டுபிடிப்புகள்",
-            description: "சென்னையில் குழந்தைகளுக்கான புதிய அறிவியல் கண்டுபிடிப்புகள் குறித்த கண்காட்சி நடைபெறவுள்ளது.",
-            image: "https://images.unsplash.com/photo-1632571401005-458e9d244591?q=80&w=500&auto=format&fit=crop",
-            url: "https://www.sciencekids.co.nz/sciencefacts/countries/india.html",
-            isTamil: true
-          }
-        ]);
       }
-    };
+      
+      // Fetch from selected regional language source
+      try {
+        const regionalSourceUrl = regionalSources[selectedLanguage];
+        const response = await axios.get(regionalSourceUrl, { timeout: 10000 });
+        
+        if (response.data && response.data.items && Array.isArray(response.data.items)) {
+          const articles = response.data.items.map(item => ({
+            title: item.title,
+            description: item.description || item.content,
+            url: item.link,
+            image: item.enclosure?.link || item.thumbnail || extractImageFromContent(item.content || item.description),
+            publishedAt: item.pubDate,
+            language: selectedLanguage
+          }));
+          
+          // Filter articles based on inappropriate terms
+          const filteredArticles = articles.filter(article => {
+            if (!article.title || !article.description) return false;
+            
+            const titleLower = article.title.toLowerCase();
+            const descLower = article.description.toLowerCase();
+            
+            return !inappropriateTerms.some(term => 
+              titleLower.includes(term) || descLower.includes(term)
+            );
+          });
+          
+          regionalArticles = filteredArticles;
+        }
+      } catch (sourceError) {
+        console.error(`Error fetching from regional source:`, sourceError);
+      }
+      
+      // Select English articles (prioritize ones with images)
+      let englishNewsWithImages = allEnglishArticles
+        .filter(article => article.image)
+        .slice(0, 4);
+      
+      // If not enough articles with images, add articles without images
+      if (englishNewsWithImages.length < 4) {
+        const englishNewsWithoutImages = allEnglishArticles
+          .filter(article => !article.image)
+          .slice(0, 4 - englishNewsWithImages.length);
+          
+        englishNewsWithImages = [...englishNewsWithImages, ...englishNewsWithoutImages];
+      }
+      
+      // Select one regional article (preferably with image)
+      const regionalWithImage = regionalArticles.filter(article => article.image);
+      let selectedRegionalArticle = regionalWithImage.length > 0 
+        ? [regionalWithImage[0]] 
+        : regionalArticles.length > 0 ? [regionalArticles[0]] : [];
+      
+      // Add language indicator
+      if (selectedRegionalArticle.length > 0) {
+        selectedRegionalArticle[0].isRegional = true;
+      }
+      
+      // Combine English and regional news - LIMIT TO 5 TOTAL
+      const finalNews = [...englishNewsWithImages.slice(0, 4), ...selectedRegionalArticle].slice(0, 5);
+      
+      if (finalNews.length === 0) {
+        // Provide sample news if no valid articles found
+        const fallbackNews = [
+          {
+            title: "Amazing Facts About Space",
+            description: "Discover fascinating facts about our solar system and the universe beyond.",
+            url: "https://spaceplace.nasa.gov/",
+            image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=500&auto=format&fit=crop"
+          },
+          {
+            title: "Animals of the Amazon Rainforest",
+            description: "Learn about the incredible biodiversity in Earth's largest rainforest.",
+            url: "https://kids.nationalgeographic.com/",
+            image: "https://images.unsplash.com/photo-1535338454770-8be927b5a00b?q=80&w=500&auto=format&fit=crop"
+          },
+          {
+            title: "How Volcanoes Work",
+            description: "Explore the science behind volcanic eruptions and their impact on Earth.",
+            url: "https://www.sciencenewsforstudents.org/",
+            image: "https://images.unsplash.com/photo-1622675363311-3e1904dc1885?q=80&w=500&auto=format&fit=crop"
+          }
+        ];
+        setNews(fallbackNews.slice(0, 5));
+      } else {
+        setNews(finalNews);
+      }
+      
+      setLastRefreshTime(new Date());
+      setLoading(false);
+      
+    } catch (err) {
+      console.error("Error fetching RSS feeds:", err);
+      setLoading(false);
+      setError("Unable to load news content. Please try again later.");
+    }
+  };
+  
+  useEffect(() => {
+    fetchRssFeed();
     
-    fetchNews();
-  }, []);
+    // Set up the 2-hour refresh interval
+    const twoHoursInMs = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+    const refreshInterval = setInterval(() => {
+      fetchRssFeed();
+    }, twoHoursInMs);
+    
+    // Clean up the interval on component unmount
+    return () => clearInterval(refreshInterval);
+  }, [selectedLanguage]); // Re-fetch when language changes
+  
+  // Helper function to extract image from HTML content
+  const extractImageFromContent = (content) => {
+    if (!content) return null;
+    
+    // Create a temporary DOM element to parse the HTML content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    
+    // Find the first image in the content
+    const img = tempDiv.querySelector('img');
+    return img ? img.src : null;
+  };
+  
+  // Manually refresh news
+  const handleRefresh = () => {
+    fetchRssFeed();
+  };
+  
+  // Change regional language
+  const handleLanguageChange = (language) => {
+    setSelectedLanguage(language);
+  };
+  
+  // Map language codes to display names
+  const languageNames = {
+    ta: 'தமிழ்',
+    ml: 'മലയാളം',
+    te: 'తెలుగు'
+  };
   
   return (
     <section className="news-section">
       <div className="section-header">
         <h1>Today's Learning News</h1>
         <p className="section-subtitle">Stay updated with kid-friendly discoveries from India and around the world</p>
+        
+        <div className="news-controls">
+          <div className="language-selector">
+            <span>Regional news: </span>
+            <button 
+              className={selectedLanguage === 'ta' ? 'active' : ''} 
+              onClick={() => handleLanguageChange('ta')}
+            >
+              தமிழ்
+            </button>
+            <button 
+              className={selectedLanguage === 'ml' ? 'active' : ''} 
+              onClick={() => handleLanguageChange('ml')}
+            >
+              മലയാളം
+            </button>
+            <button 
+              className={selectedLanguage === 'te' ? 'active' : ''} 
+              onClick={() => handleLanguageChange('te')}
+            >
+              తెలుగు
+            </button>
+          </div>
+          <div className="refresh-info">
+            <span>Last updated: {formatRefreshTime(lastRefreshTime)}</span>
+          </div>
+        </div>
       </div>
       
       {loading ? (
@@ -221,50 +264,49 @@ const NewsSection = () => {
           <div className="loading-spinner"></div>
           <p>Loading today's exciting news...</p>
         </div>
+      ) : error ? (
+        <div className="news-error">
+          <p>{error}</p>
+          <button onClick={handleRefresh} className="retry-button">Try Again</button>
+        </div>
       ) : (
         <div className="news-grid">
-          {Array.isArray(news) && news.length > 0 ? (
-            news.map((item, index) => (
-              <motion.div 
-                key={index}
-                className={`news-card ${item.isTamil ? 'tamil-news' : ''}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
-              >
-                {item.isTamil && (
-                  <div className="language-badge">தமிழ்</div>
-                )}
-                <div className="news-image">
-                  <img 
-                    src={item.image || "https://images.unsplash.com/photo-1584697964328-b1e7f63dca95?q=80&w=500&auto=format&fit=crop"} 
-                    alt={item.title} 
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "https://images.unsplash.com/photo-1584697964328-b1e7f63dca95?q=80&w=500&auto=format&fit=crop";
-                    }}
-                  />
-                </div>
-                <div className="news-content">
-                  <h3>{item.title}</h3>
-                  <p>{item.description?.substring(0, 90)}...</p>
-                  <a 
-                    href={item.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="read-more-button"
-                  >
-                    Learn More
-                  </a>
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="news-error">
-              <p>Couldn't load articles. Please try again later.</p>
-            </div>
-          )}
+          {news.map((item, index) => (
+            <motion.div 
+              key={index}
+              className={`news-card ${item.isRegional ? 'regional-news' : ''}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -10, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
+            >
+              {item.isRegional && (
+                <div className="language-badge">{languageNames[item.language] || 'Regional'}</div>
+              )}
+              <div className="news-image">
+                <img 
+                  src={item.image || "https://images.unsplash.com/photo-1584697964328-b1e7f63dca95?q=80&w=500&auto=format&fit=crop"} 
+                  alt={item.title} 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1584697964328-b1e7f63dca95?q=80&w=500&auto=format&fit=crop";
+                  }}
+                />
+              </div>
+              <div className="news-content">
+                <h3>{item.title}</h3>
+                <p>{item.description?.substring(0, 90).replace(/<[^>]*>/g, '')}...</p>
+                <a 
+                  href={item.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="read-more-button"
+                >
+                  Learn More
+                </a>
+              </div>
+            </motion.div>
+          ))}
         </div>
       )}
     </section>

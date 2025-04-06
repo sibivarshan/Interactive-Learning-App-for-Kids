@@ -1,11 +1,9 @@
 \node_modules
 .scannerwork/
-sonar-project.properties
 # Dependencies
 node_modules/
 /.pnp
 .pnp.js
-
 # Environment variables
 .env
 .env.local
