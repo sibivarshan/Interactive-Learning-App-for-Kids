@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import styles from "./StoryPrompt.module.css";
 import { useNavigate } from 'react-router-dom';
-import { motion } from "framer-motion"; // Add framer-motion for animations
+import { motion } from "framer-motion";
+import config from "../../config";
 
 const StoryPrompt = () => {
   const [prompt, setPrompt] = useState("");
@@ -16,7 +17,7 @@ const StoryPrompt = () => {
   const storyContainerRef = useRef(null);
   const navigate = useNavigate();
 
-  const apiKey = "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";
+  const apiKey = config.openRouterApiKey;
   console.log("API Key status:", apiKey ? "Loaded" : "Not loaded");
   
   const languages = [
@@ -27,6 +28,16 @@ const StoryPrompt = () => {
     { code: "chinese", name: "Chinese", voice: "zh-CN", flag: "🇨🇳" },
     { code: "hindi", name: "Hindi", voice: "hi-IN", flag: "🇮🇳" },
     { code: "tamil", name: "Tamil", voice: "ta-IN", flag: "🇮🇳" },
+    // Add new Indian regional languages
+    { code: "malayalam", name: "Malayalam", voice: "ml-IN", flag: "🇮🇳" },
+    { code: "telugu", name: "Telugu", voice: "te-IN", flag: "🇮🇳" },
+    { code: "kannada", name: "Kannada", voice: "kn-IN", flag: "🇮🇳" },
+    { code: "bengali", name: "Bengali", voice: "bn-IN", flag: "🇮🇳" },
+    { code: "marathi", name: "Marathi", voice: "mr-IN", flag: "🇮🇳" },
+    { code: "gujarati", name: "Gujarati", voice: "gu-IN", flag: "🇮🇳" },
+    { code: "punjabi", name: "Punjabi", voice: "pa-IN", flag: "🇮🇳" },
+    { code: "odia", name: "Odia", voice: "or-IN", flag: "🇮🇳" },
+    { code: "assamese", name: "Assamese", voice: "as-IN", flag: "🇮🇳" },
     { code: "japanese", name: "Japanese", voice: "ja-JP", flag: "🇯🇵" },
     { code: "russian", name: "Russian", voice: "ru-RU", flag: "🇷🇺" },
   ];

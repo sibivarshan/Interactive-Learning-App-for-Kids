@@ -18,6 +18,7 @@ import SpeechChecker from './components/SpeechChecker/SpeechChecker';
 import CoursePage from "./components/lecture/CoursePage";
 import CourseContentPage from "./components/lecture/CourseContentPage";
 import QuizPage from "./components/lecture/QuizPage";
+import ScienceQuiz from './components/ScienceQuiz';
 import QuizBoard from './components/QuizBoard.jsx';
 import InvadersQuiz from './components/invadersQuiz/InvadersQuiz';
 import ImageQuiz from  './components/imageQuiz/Quiz.jsx';
@@ -29,6 +30,12 @@ import MultiplayerWordBuilder from './components/1v1player_game/MultiplayerWordB
 import MathChallenge from './components/1v1player_game/MathChallenge';
 import MemoryMatchMultiplayer from './components/1v1player_game/MemoryMatchMultiplayer';
 import LectureProgressReport from './components/lecture/LectureProgressReport'; // Import the new component
+import InactivityTracker from './components/inactivity/InactivityTracker';
+import emailjs from '@emailjs/browser';
+import EmailTest from './components/EmailTest';
+
+// Add this line before your function component
+emailjs.init("5XM2UmUfmxKuh3Zl5"); // Use your actual EmailJS user ID
 
 function App() {
   const [user, setUser] = useState(null);
@@ -51,9 +58,14 @@ function App() {
      return <div>Loading...</div>;
   }
 
+  // Helper function to create protected routes
+  const protectedRoute = (Component, props = {}) => 
+    user ? <Component {...props} /> : <Navigate to="/login" />;
+
   return (
     <Router>
       <div className="App">
+        {auth.currentUser && <InactivityTracker />} {/* Only track if logged in */}
         <Routes>
           {/* Authentication Routes */}
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
@@ -61,37 +73,31 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/check-email" element={<CheckEmail />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/"
-            element={user ? <Homepage onLogout={handleLogout} /> : <Navigate to="/login" />}
-          />
-          <Route path="/profile-page" element={user ? <ProfilePage /> : <Navigate to="/login" />} />
-          <Route path="/games" element={user ? <GamesPage /> : <Navigate to="/login" />} />
-          <Route path="/moneygame" element={user ? <MoneyGame /> : <Navigate to="/login" />} />
-          <Route
-            path="/games/Ballongame"
-            element={
-              user ? (
-                <Game numberOfBalloons={Constants.gameCells} gameDuration={Constants.gameDuration} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route path="/send-friend-request" element={user ? <SendFriendRequest /> : <Navigate to="/login" />} />
-          <Route path="/friend-requests" element={user ? <FriendRequestNotifications /> : <Navigate to="/login" />} />
-          <Route path="/create-story" element={user ? <StoryPrompt /> : <Navigate to="/login" />} />
-          <Route path="/speech-checker" element={user ? <SpeechChecker /> : <Navigate to="/login" />} />
-          <Route path="/quizzes" element={user ? <QuizBoard /> : <Navigate to="/login" />}/>
-          <Route path="/quizzes/invaders" element={user ? <InvadersQuiz /> : <Navigate to="/login" />}/>
-          <Route path="/quizzes/imageQuiz" element={user ? <ImageQuiz /> : <Navigate to="/login" />}/>
-          <Route path="/progress" element={user ? <ProgressPage /> : <Navigate to="/login" />}/>
-          {/* Challenge System Routes */}
-          <Route path="/challenge-friend" element={user ? <ChallengePage /> : <Navigate to="/login" />} />
-          <Route path="/word-builder/:sessionId" element={user ? <MultiplayerWordBuilder /> : <Navigate to="/login" />} />
-          <Route path="/math-challenge/:sessionId" element={user ? <MathChallenge /> : <Navigate to="/login" />} />
-          <Route path="/memory-match/:sessionId" element={user ? <MemoryMatchMultiplayer /> : <Navigate to="/login" />} />
+          {/* Core Routes */}
+          <Route path="/" element={protectedRoute(Homepage, { onLogout: handleLogout })} />
+          <Route path="/profile-page" element={protectedRoute(ProfilePage)} />
+          
+          {/* Game Routes */}
+          <Route path="/games" element={protectedRoute(GamesPage)} />
+          <Route path="/moneygame" element={protectedRoute(MoneyGame)} />
+          <Route path="/games/Ballongame" element={protectedRoute(Game, {
+            numberOfBalloons: Constants.gameCells,
+            gameDuration: Constants.gameDuration
+          })} />
+          
+          {/* Social Routes */}
+          <Route path="/send-friend-request" element={protectedRoute(SendFriendRequest)} />
+          <Route path="/friend-requests" element={protectedRoute(FriendRequestNotifications)} />
+          <Route path="/create-story" element={protectedRoute(StoryPrompt)} />
+          <Route path="/speech-checker" element={protectedRoute(SpeechChecker)} />
+          
+          {/* Quiz Routes */}
+          <Route path="/quizzes" element={protectedRoute(QuizBoard)} />
+          <Route path="/quizzes/invaders" element={protectedRoute(InvadersQuiz)} />
+          <Route path="/quizzes/imageQuiz" element={protectedRoute(ImageQuiz)} />
+          <Route path="/quizzes/science" element={protectedRoute(ScienceQuiz)} />
+          <Route path="/progress" element={protectedRoute(ProgressPage)} />
+          
           {/* Lecture Module Routes */}
           <Route path="/lecture" element={user ? <CoursePage /> : <Navigate to="/login" />} />
           <Route path="/lecture/course-content" element={user ? <CourseContentPage /> : <Navigate to="/login" />} />
@@ -100,6 +106,18 @@ function App() {
             path="/lecture/progress-report" 
             element={user ? <LectureProgressReport /> : <Navigate to="/login" />} 
           />
+          {/* Challenge System Routes */}
+          <Route path="/challenge-friend" element={protectedRoute(ChallengePage)} />
+          <Route path="/word-builder/:sessionId" element={protectedRoute(MultiplayerWordBuilder)} />
+          <Route path="/math-challenge/:sessionId" element={protectedRoute(MathChallenge)} />
+          <Route path="/memory-match/:sessionId" element={protectedRoute(MemoryMatchMultiplayer)} />
+          
+          {/* Lecture Module Routes */}
+          <Route path="/lecture" element={protectedRoute(CoursePage)} />
+          <Route path="/lecture/course-content" element={protectedRoute(CourseContentPage)} />
+          <Route path="/lecture/quiz" element={protectedRoute(QuizPage)} />
+          <Route path="/lecture/progress-report" element={protectedRoute(LectureProgressReport)} />
+          <Route path="/email-test" element={<EmailTest />} />
         </Routes>
       </div>
     </Router>

@@ -513,3 +513,18 @@
   margin-left: 8px;
   font-size: 14px;
 }
+
+/* Add to your StoryPrompt.module.css */
+.debugButton {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 5px 10px;
+  margin-left: 10px;
+}
+
+.debugButton:hover {
+  background-color: #e0e0e0;
+}
