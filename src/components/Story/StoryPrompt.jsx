@@ -27,6 +27,16 @@ const StoryPrompt = () => {
     { code: "chinese", name: "Chinese", voice: "zh-CN", flag: "🇨🇳" },
     { code: "hindi", name: "Hindi", voice: "hi-IN", flag: "🇮🇳" },
     { code: "tamil", name: "Tamil", voice: "ta-IN", flag: "🇮🇳" },
+    // Add new Indian regional languages
+    { code: "malayalam", name: "Malayalam", voice: "ml-IN", flag: "🇮🇳" },
+    { code: "telugu", name: "Telugu", voice: "te-IN", flag: "🇮🇳" },
+    { code: "kannada", name: "Kannada", voice: "kn-IN", flag: "🇮🇳" },
+    { code: "bengali", name: "Bengali", voice: "bn-IN", flag: "🇮🇳" },
+    { code: "marathi", name: "Marathi", voice: "mr-IN", flag: "🇮🇳" },
+    { code: "gujarati", name: "Gujarati", voice: "gu-IN", flag: "🇮🇳" },
+    { code: "punjabi", name: "Punjabi", voice: "pa-IN", flag: "🇮🇳" },
+    { code: "odia", name: "Odia", voice: "or-IN", flag: "🇮🇳" },
+    { code: "assamese", name: "Assamese", voice: "as-IN", flag: "🇮🇳" },
     { code: "japanese", name: "Japanese", voice: "ja-JP", flag: "🇯🇵" },
     { code: "russian", name: "Russian", voice: "ru-RU", flag: "🇷🇺" },
   ];

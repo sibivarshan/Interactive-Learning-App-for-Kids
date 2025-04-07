@@ -10,6 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { motion, AnimatePresence } from 'framer-motion'; // Added AnimatePresence
 import NewsSection from './News/NewsSection';
 
+
+
 function Homepage({ onLogout, currentUserId }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -134,6 +136,9 @@ function Homepage({ onLogout, currentUserId }) {
                 <Link to="/progress" className="nav-item" onClick={handleNavItemClick}>
                   <FaChartLine className="nav-icon" /> <span>Progress</span>
                 </Link>
+
+               
+
                 <div className="profile-menu" onClick={toggleDropdown} aria-label="Profile Menu">
                   <div className="profile-preview">
                     <img src="https://cdn-icons-png.flaticon.com/512/5294/5294712.png" alt="User Profile" />
