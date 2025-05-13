@@ -30,6 +30,12 @@ import MultiplayerWordBuilder from './components/1v1player_game/MultiplayerWordB
 import MathChallenge from './components/1v1player_game/MathChallenge';
 import MemoryMatchMultiplayer from './components/1v1player_game/MemoryMatchMultiplayer';
 import LectureProgressReport from './components/lecture/LectureProgressReport'; // Import the new component
+import InactivityTracker from './components/inactivity/InactivityTracker';
+import emailjs from '@emailjs/browser';
+import EmailTest from './components/EmailTest';
+
+// Add this line before your function component
+emailjs.init("5XM2UmUfmxKuh3Zl5"); // Use your actual EmailJS user ID
 
 function App() {
   const [user, setUser] = useState(null);
@@ -59,6 +65,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        {auth.currentUser && <InactivityTracker />} {/* Only track if logged in */}
         <Routes>
           {/* Authentication Routes */}
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
@@ -110,6 +117,7 @@ function App() {
           <Route path="/lecture/course-content" element={protectedRoute(CourseContentPage)} />
           <Route path="/lecture/quiz" element={protectedRoute(QuizPage)} />
           <Route path="/lecture/progress-report" element={protectedRoute(LectureProgressReport)} />
+          <Route path="/email-test" element={<EmailTest />} />
         </Routes>
       </div>
     </Router>
